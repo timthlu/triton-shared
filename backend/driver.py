@@ -272,8 +272,13 @@ def compile_module(launcher_src, kernel_placeholder_name):
                   Path(obj_path).write_bytes(kernel_obj)
                   Path(launcher_src_path).write_text(src)
                   # Compile it together.
+                  clang_path = "/workspace/llvm-install/bin/clang++"
+                  asan_path = "/workspace/llvm-install/lib/clang/21/lib/x86_64-unknown-linux-gnu/libclang_rt.asan.a"
+
+                  # Compile it together.
                   subprocess.check_call([
-                    "g++", "-std=c++17", launcher_src_path, obj_path,
+                    clang_path, "-g", "-fsanitize=address",
+                    "-std=c++17", launcher_src_path, obj_path, asan_path, 
                     f"-I{py_include_dir}", f"-I{include_dir}", f"-L{py_lib_dir}",
                     "-shared", f"-l{py_lib}", "-fPIC", "-o", so_path
                   ])
