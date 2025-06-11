@@ -294,7 +294,7 @@ def compile_module(launcher_src, kernel_placeholder_name):
                     clang_path, "-g", "-fsanitize=thread", "-fopenmp", 
                     "-std=c++17", launcher_src_path, obj_path,
                     f"-I{py_include_dir}", f"-I{include_dir}", f"-L{py_lib_dir}",
-                    "-shared", f"-l{py_lib}", "-fPIC", "-o", so_path,
+                    "-shared", f"-l{py_lib}", "-fPIC", "-o", so_path
                   ])
 
               with open(so_path, "rb") as f:
