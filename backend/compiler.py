@@ -116,13 +116,26 @@ def _llir_to_bin(llir: str, metadata):
     metadata["name"] = matches[0]
     with tempfile.TemporaryDirectory() as tmpdir:
         src_path = os.path.join(tmpdir, "kernel.ll")
-        dst_path = os.path.join(tmpdir, "kernel.o")
+        modified_src_path = os.path.join(tmpdir, "kernel-modified.ll")
         Path(src_path).write_text(llir)
+        
+        # pass to add sanitizer attributes
+        opt_path = "/workspace/llvm-install/bin/opt"
+        sanitizer_attributes_path = "/workspace/sanitizer-passes/sanitizer-attributes/build/libSanitizerAttributes.so"
 
+        subprocess.check_call([opt_path, "-load-pass-plugin", sanitizer_attributes_path, 
+            "-passes=sanitizer-attributes", "-sanitizer-type=tsan", "-S", src_path, 
+            "-o", modified_src_path])
+
+        dst_path = os.path.join(tmpdir, "kernel.o")
+
+        # compile to object file
         clang_path = "/workspace/llvm-install/bin/clang++"
 
-        subprocess.check_call([clang_path, "-g", "-fsanitize=thread", "-c", src_path, "-o", dst_path])
+        subprocess.check_call([clang_path, "-g", "-fsanitize=thread", "-c", modified_src_path, "-o", dst_path])
 
+        _dump_ir_if_needed([src_path, modified_src_path, dst_path])
+        
         return Path(dst_path).read_bytes()
 
 

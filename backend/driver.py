@@ -103,7 +103,7 @@ extern "C" {{
 static void _launch(int gridX, int gridY, int gridZ, {arg_decls}) {{
   if (gridX*gridY*gridZ > 0) {{
     // Cast "function" to the real function type.
-    #pragma omp parallel for collapse(3) num_threads({omp_num_threads}) schedule(guided, 64)
+    #pragma omp parallel for collapse(3)
     for(int x = 0; x < gridX; x++) {{
       for(int y = 0; y < gridY; y++) {{
         for(int z = 0; z < gridZ; z++) {{
@@ -286,15 +286,15 @@ def compile_module(launcher_src, kernel_placeholder_name):
                   so_path = os.path.join(tmpdir, "kernel.so")
                   Path(obj_path).write_bytes(kernel_obj)
                   Path(launcher_src_path).write_text(src)
+
                   # Compile it together.
                   clang_path = "/workspace/llvm-install/bin/clang++"
 
-                  # Compile it together.
                   subprocess.check_call([
-                    clang_path, "-fsanitize=thread", "-lclang_rt.tsan",
+                    clang_path, "-g", "-fsanitize=thread", "-fopenmp", 
                     "-std=c++17", launcher_src_path, obj_path,
                     f"-I{py_include_dir}", f"-I{include_dir}", f"-L{py_lib_dir}",
-                    "-shared", f"-l{py_lib}", "-fPIC", "-o", so_path, "-fopenmp"
+                    "-shared", f"-l{py_lib}", "-fPIC", "-o", so_path
                   ])
 
               with open(so_path, "rb") as f:
